@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Teste CORS</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; cursor: pointer; }
+        #result { margin-top: 20px; }
+        .produto { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        .erro { color: red; font-weight: bold; }
+        .info { color: blue; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+<h1>Teste CORS - Consumir API</h1>
+<button id="fetchData">Obter Produtos</button>
+<div id="result"></div>
+
+<script>
+    $(document).ready(function(){
+        $("#fetchData").click(function(){
+            console.log("=== INICIANDO REQUISIÇÃO ===");
+
+            $.ajax({
+                url: 'https://localhost:7206/api/produtos',
+                type: 'GET',
+                dataType: 'json',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                success: function(response){
+                    console.log("✓ Sucesso:", response);
+                    var htmlContent = '';
+
+                    if(Array.isArray(response)) {
+                        response.forEach(function(produto){
+                            htmlContent += `<div class="produto">
+                                        <p><strong>ID:</strong> ${produto.id}</p>
+                                        <p><strong>Nome:</strong> ${produto.nome}</p>
+                                    </div>`;
+                        });
+                    } else {
+                        htmlContent += `<div class="produto">
+                                    <p><strong>ID:</strong> ${response.id}</p>
+                                    <p><strong>Nome:</strong> ${response.nome}</p>
+                                </div>`;
+                    }
+
+                    $("#result").html(htmlContent);
+                },
+                error: function(xhr, status, error){
+                    console.error("✗ Erro Completo:", {
+                        status: status,
+                        error: error,
+                        statusCode: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        responseJSON: xhr.responseJSON
+                    });
+
+                    var errorMessage = '';
+
+                    // Detectar erro CORS
+                    if(status === 'error' && xhr.status === 0) {
+                        errorMessage = `<p class="erro">❌ ERRO CORS DETECTADO!</p>
+                                           <p class="info"><strong>Possíveis causas:</strong></p>
+                                           <ul>
+                                               <li>A API não está retornando headers CORS corretos</li>
+                                               <li>A origem (origin) não está autorizada na API</li>
+                                               <li>O método HTTP não está permitido</li>
+                                               <li>A API pode estar offline</li>
+                                           </ul>
+                                           <p class="info"><strong>Verifique o console do navegador (F12) para mais detalhes</strong></p>`;
+                    } else if(xhr.status === 0) {
+                        errorMessage = `<p class="erro">❌ Erro de Conexão/CORS</p>
+                                           <p class="info">Status: ${xhr.status}</p>
+                                           <p class="info">Erro: ${error}</p>`;
+                    } else {
+                        errorMessage = `<p class="erro">❌ Erro na Requisição</p>
+                                           <p class="info">Status: ${xhr.status} ${xhr.statusText}</p>
+                                           <p class="info">Erro: ${error}</p>`;
+
+                        if(xhr.responseText) {
+                            errorMessage += `<p class="info"><strong>Resposta:</strong></p>
+                                               <pre>${xhr.responseText}</pre>`;
+                        }
+                    }
+
+                    $("#result").html(errorMessage);
+                },
+                complete: function(xhr, status) {
+                    console.log("=== REQUISIÇÃO COMPLETA ===");
+                    console.log("Headers de Resposta:");
+                    console.log("Access-Control-Allow-Origin:", xhr.getResponseHeader('Access-Control-Allow-Origin'));
+                    console.log("Access-Control-Allow-Methods:", xhr.getResponseHeader('Access-Control-Allow-Methods'));
+                    console.log("Access-Control-Allow-Headers:", xhr.getResponseHeader('Access-Control-Allow-Headers'));
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
