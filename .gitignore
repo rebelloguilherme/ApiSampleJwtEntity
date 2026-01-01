@@ -56,3 +56,5 @@ nunit-*.xml
 # Rider IDE
 riderModule.iml
 /_ReSharper.Caches/
+.idea/*
+ApiFuncional/Migrations
